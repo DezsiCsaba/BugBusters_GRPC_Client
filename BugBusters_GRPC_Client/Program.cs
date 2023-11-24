@@ -62,12 +62,15 @@ Clientlibrary cli = new Clientlibrary(
 
 
 //setup
-await cli.Login(name, password);
+await cli.Login(name, password, async() => { });
 cli.ReadTask();
 
+
 //other call tests
-await cli.Cheat();
-await cli.BuyBike();
+await cli.Cheat(async() => { 
+    await cli.BuyBike(async () => { }); 
+});
+
 
 //await cli.DESTROY_THIS_SHIT();
 

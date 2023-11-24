@@ -22,7 +22,7 @@ namespace BugBusters_GRPC_Client {
 
         //values will be changed depending on the command and the commands output
         string currentCommandId;
-        
+        Func<Task> currentEvent;
         //theese guys will change all the time
         ByteString mapImagePNG;
         int cmdCounter;
@@ -46,7 +46,7 @@ namespace BugBusters_GRPC_Client {
                 if (cmdID != "ItemLocations")
                 {
                     Console.WriteLine("\n>>>CommandID:" + res.CommandId + ", " + data);
-                    
+                    await currentEvent.Invoke();
                     if (cmdID == "CheatResponse") {
                         Console.WriteLine("more moneeey");
                     }
@@ -59,11 +59,13 @@ namespace BugBusters_GRPC_Client {
                             Bikes.Add(bike);
 
                             await Console.Out.WriteLineAsync("\t> new bike added with id:" + data);
-                            
-                            //await BuyMine(bike.id);
-                            await PlaceMine(bike.id);
-                            //await SteerBike(bike.id, true, 0);
-                        }                        
+
+                            await BuyMine(bike.id, async () => {
+                                await PlaceMine(bike.id, async () => {
+                                    //await SteerBike(bike.id, true, 0, async() => {});
+                                });
+                            });
+                        }
                     }
                     else if( cmdID == "BuyMineResponse") {
                         if (data == "NOP") {
@@ -154,8 +156,9 @@ namespace BugBusters_GRPC_Client {
         }
 
 
-        public async Task Login(string teamName, string password)
+        public async Task Login(string teamName, string password, Func<Task> callback)
         {
+            currentEvent = callback;
             Console.WriteLine(">>> Login");
             //AsyncDuplexStreamingCall<CommandMessage, CommandMessage> call = client.CommunicateWithStreams();
 
@@ -171,7 +174,8 @@ namespace BugBusters_GRPC_Client {
             });
         }
 
-        public async Task BuyBike() {
+        public async Task BuyBike(Func<Task> callback) {
+            currentEvent = callback;
             Console.WriteLine("\n>>> Buying new bike");
             cmdCounter++;
             currentCommandId = "BuyBike";
@@ -185,8 +189,9 @@ namespace BugBusters_GRPC_Client {
 
         }
 
-        public async Task BuyMine(int bikeId)
+        public async Task BuyMine(int bikeId, Func<Task> callback)
         {
+            currentEvent = callback;
             Console.WriteLine(">>> BuyMine for bike with bikeId:" + bikeId);
             currentBikeID = bikeId;
             cmdCounter++;
@@ -202,7 +207,8 @@ namespace BugBusters_GRPC_Client {
             });
         }
 
-        public async Task PlaceMine(int bikeId) {
+        public async Task PlaceMine(int bikeId, Func<Task> callback) {
+            currentEvent = callback;
             Console.WriteLine("\n>>> Placing mine");
             cmdCounter++;
             currentCommandId = "PlaceMine";
@@ -216,8 +222,9 @@ namespace BugBusters_GRPC_Client {
             });
         }
 
-        public async Task PickupPacket(int bikeId, int packetId)
+        public async Task PickupPacket(int bikeId, int packetId, Func<Task> callback)
         {
+            currentEvent = callback;
             Console.WriteLine("\n>>> Picking up packet");
             cmdCounter++;
             var payload= new PickupPacketInputModel { bikeId=bikeId, packetId=packetId };
@@ -234,7 +241,8 @@ namespace BugBusters_GRPC_Client {
             });
         }
 
-        public async Task DropPacket(int packetId) {
+        public async Task DropPacket(int packetId, Func<Task> callback) {
+            currentEvent = callback;
             Console.WriteLine("\n>>> Dropping packet");
             cmdCounter++;
             currentCommandId = "DropPacket";
@@ -248,7 +256,8 @@ namespace BugBusters_GRPC_Client {
             });
         }
 
-        public async Task SteerBike(int bikeId, bool isActive, int degree) {
+        public async Task SteerBike(int bikeId, bool isActive, int degree, Func<Task> callback) {
+            currentEvent = callback;
             Console.WriteLine("\n>>> Steering bike");
             cmdCounter++;
             currentCommandId = "SteerBike";
@@ -265,7 +274,8 @@ namespace BugBusters_GRPC_Client {
             });
         }
 
-        public async Task Cheat() {
+        public async Task Cheat(Func<Task> callback) {
+            currentEvent = callback;
             Console.WriteLine("\n>>> cheat activated :D");
             cmdCounter++;
             currentCommandId = "Cheat";
