@@ -36,6 +36,8 @@ using var channel = GrpcChannel.ForAddress("http://10.8.9.121:9080");
 var client = new PdService.PdServiceClient(channel);
 var call = client.CommunicateWithStreams();
 
+Console.WriteLine(">>> Connected to server.");
+
 //RegisterTeam (teamName, teamPassword, teamImagePng) 
 var registerReply = await client.RegisterTeamAsync(
     new RegistrationRequestMessage { 
@@ -45,50 +47,26 @@ var registerReply = await client.RegisterTeamAsync(
     }
 );
 mapImagePNG = registerReply.MapImagePng;
+
 Console.WriteLine("Registration complete with the following id : " + registerReply.TeamId);
 
 
-object Communicate(CommandMessage msg){
+Clientlibrary cli = new Clientlibrary(
+    client = client,
+    call = call,
+    cmdCounter = 0,
+    mapImagePNG = registerReply.MapImagePng
+);
 
-    return streams = client.CommunicateWithStreams();
-}
- 
-async Task<T> ReadTask<T>(AsyncDuplexStreamingCall<CommandMessage,CommandMessage> call)
-{
-    await foreach (var res in call.ResponseStream.ReadAllAsync())
-    {
-        if (res.CommandId != "ItemLocations") {
-            Console.WriteLine("CommandID:" + res.CommandId + ", " + res.CommandData.Substring(0, 10));
-        }
-        
-        var data = res.CommandData;
-        //return JsonSerializer.Deserialize<T>(data);
-    }
-    return default(T);
+
+void loginCallback(string resp) {
+    Console.WriteLine("\t> Callback output: " + resp);
 }
 
 
-async Task Login(string teamName, string password)
-{
-    Console.WriteLine(">>> Login");
-    //AsyncDuplexStreamingCall<CommandMessage, CommandMessage> call = client.CommunicateWithStreams();
-    var req = call.RequestStream;
+await cli.Login("BugBusters", "password", loginCallback);
 
-    LoginInputModel model = new LoginInputModel { teamName = teamName,password = password };
-    var modelAsJSON = JsonConvert.SerializeObject(model);
-
-    await call.RequestStream.WriteAsync(new CommandMessage {
-        CmdCounter = 1,
-        CommandId = "Login",
-        CommandData = modelAsJSON
-    });
-    await call.RequestStream.CompleteAsync();
-    await Console.Out.WriteLineAsync(">>> Login closed");
-}
-
-await Login("BugBusters", "password");
-
-await ReadTask<loginOutputModel>(call);
+cli.ReadTask();
 
 Console.WriteLine("Press any key to exit...");
 Console.ReadKey();
