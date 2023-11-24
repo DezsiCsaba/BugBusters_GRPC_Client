@@ -58,29 +58,13 @@ Clientlibrary cli = new Clientlibrary(
     mapImagePNG = registerReply.MapImagePng
 );
 
-void generalCallback(string resp)
-{
-    Console.WriteLine("\t>Callback output: " + resp);
-}
-
-
-void loginCallback(string resp) {
-    Console.WriteLine("\t> Login Callback output: " + resp);
-}
-void BuyBikeCallback(string resp) {
-    cli.BuyMine(BuyMineCallback, cli.Bikes[0].id).GetAwaiter();
-}
-void BuyMineCallback(string resp) {
-    Console.WriteLine("\t> BuyMine Callback output: " + resp);
-}
 
 //setup
-await cli.Login("BugBusters", "password", loginCallback);
+await cli.Login("BugBusters", "password");
 cli.ReadTask();
 
 //other call tests
-await cli.BuyBike(generalCallback);
-
+await cli.BuyBike();
 
 
 
