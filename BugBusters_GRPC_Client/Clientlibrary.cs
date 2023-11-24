@@ -22,7 +22,7 @@ namespace BugBusters_GRPC_Client {
 
         //values will be changed depending on the command and the commands output
         string currentCommandId;
-
+        
         //theese guys will change all the time
         ByteString mapImagePNG;
         int cmdCounter;
@@ -47,31 +47,34 @@ namespace BugBusters_GRPC_Client {
                 {
                     Console.WriteLine("\n>>>CommandID:" + res.CommandId + ", " + data);
                     
+                    if (cmdID == "CheatResponse") {
+                        Console.WriteLine("more moneeey");
+                    }
                     if (cmdID == "BuyBikeResponse") {
                         if (data == "0") {
                             await Console.Out.WriteLineAsync("Could not buy new bike");
                         }
                         else {
-                            MotorBike bike = new MotorBike(Convert.ToInt32(data), 0, true, 0);
+                            MotorBike bike = new MotorBike(Convert.ToInt32(data), 2, true, 0);
                             Bikes.Add(bike);
 
                             await Console.Out.WriteLineAsync("\t> new bike added with id:" + data);
-                            currentBikeID = bike.id;
-
+                            
                             //await BuyMine(bike.id);
+                            await PlaceMine(bike.id);
                             //await SteerBike(bike.id, true, 0);
                         }                        
                     }
                     else if( cmdID == "BuyMineResponse") {
                         if (data == "NOP") {
-                            await Console.Out.WriteLineAsync("\t> Something wen horribly wrong i'm a teapot and i can make coffe" + data);
+                            await Console.Out.WriteLineAsync("\t> Something went horribly wrong i'm a teapot and i can make coffe" + data);
                         }
                         else if (data == "-1") {
                             await Console.Out.WriteLineAsync("\tSomething broke..");
                         }
                         else {
                             int index = Bikes.FindIndex(b => b.id == currentBikeID);
-                            Bikes[index].mineCount++;
+                            Bikes[index].mineCount = Bikes[index].mineCount+3;
                         }                        
                     }
                     else if (cmdID == "PlaceMineResponse") {
@@ -79,8 +82,10 @@ namespace BugBusters_GRPC_Client {
                             await Console.Out.WriteLineAsync("\tcould not place mine");
                         }
                         else {
+                            Console.WriteLine("mineId: " + data);
                             int index = Bikes.FindIndex(b => b.id == currentBikeID);
                             Bikes[index].mineCount--;
+                            await Console.Out.WriteLineAsync("remaining mines in bike(" + currentBikeID + "): " + Bikes[index].mineCount);
                         }
                     }
                     else if (cmdID == "PickupPacketResponse")
@@ -116,10 +121,11 @@ namespace BugBusters_GRPC_Client {
                             await Console.Out.WriteLineAsync("No bike movement happened");
                         }
                     }
+
                 }
                 else
                 {
-                    await Console.Out.WriteAsync("[UPDATE] > map updated");
+                    //await Console.Out.WriteAsync("[UPDATE] > map updated");
                     Items = JsonConvert.DeserializeObject<ItemLocationModel[]>(data).ToList();
                     //foreach(ItemLocationModel item in Items)
                     //{
@@ -181,12 +187,12 @@ namespace BugBusters_GRPC_Client {
 
         public async Task BuyMine(int bikeId)
         {
-            Console.WriteLine(">>> BuyMine");
+            Console.WriteLine(">>> BuyMine for bike with bikeId:" + bikeId);
             currentBikeID = bikeId;
             cmdCounter++;
             currentCommandId = "BuyMine";
 
-            var modelAsJSON = JsonConvert.SerializeObject(bikeId);
+            var modelAsJSON = JsonConvert.SerializeObject(new {bikeId = bikeId});
 
             await stream.WriteAsync(new CommandMessage
             {
@@ -200,8 +206,8 @@ namespace BugBusters_GRPC_Client {
             Console.WriteLine("\n>>> Placing mine");
             cmdCounter++;
             currentCommandId = "PlaceMine";
-
-            var modelAsJSON = JsonConvert.SerializeObject(bikeId);
+            currentBikeID = bikeId;
+            var modelAsJSON = JsonConvert.SerializeObject(new {bikeId = bikeId});
 
             await stream.WriteAsync(new CommandMessage {
                 CmdCounter = cmdCounter,
@@ -233,7 +239,7 @@ namespace BugBusters_GRPC_Client {
             cmdCounter++;
             currentCommandId = "DropPacket";
             currentPacketID = packetId;
-            var modelAsJSON = JsonConvert.SerializeObject(packetId);
+            var modelAsJSON = JsonConvert.SerializeObject(new {packetId = packetId});
 
             await stream.WriteAsync(new CommandMessage {
                 CmdCounter = cmdCounter,
@@ -246,7 +252,7 @@ namespace BugBusters_GRPC_Client {
             Console.WriteLine("\n>>> Steering bike");
             cmdCounter++;
             currentCommandId = "SteerBike";
-
+            currentBikeID = bikeId;
             SteerBikeInputModel model = new SteerBikeInputModel { 
                 bikeId = bikeId, isActive = Convert.ToInt16(isActive), degree = degree
             };
@@ -259,5 +265,18 @@ namespace BugBusters_GRPC_Client {
             });
         }
 
+        public async Task Cheat() {
+            Console.WriteLine("\n>>> cheat activated :D");
+            cmdCounter++;
+            currentCommandId = "Cheat";
+
+            var modelAsJSON = JsonConvert.SerializeObject("");
+
+            await stream.WriteAsync(new CommandMessage {
+                CmdCounter = cmdCounter,
+                CommandId = currentCommandId,
+                CommandData = modelAsJSON
+            });
+        }
     }
 }

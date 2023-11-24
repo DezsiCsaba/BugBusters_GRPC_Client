@@ -37,12 +37,14 @@ var client = new PdService.PdServiceClient(channel);
 var call = client.CommunicateWithStreams();
 
 Console.WriteLine(">>> Connected to server.");
+string name = "BugBusters";
+string password = "password";
 
 //RegisterTeam (teamName, teamPassword, teamImagePng) 
 var registerReply = await client.RegisterTeamAsync(
     new RegistrationRequestMessage { 
-        TeamName = "BugBusters",
-        TeamPassword = "password",
+        TeamName = name,
+        TeamPassword = password,
         TeamImagePng = imagebyteStr
     }
 );
@@ -60,13 +62,14 @@ Clientlibrary cli = new Clientlibrary(
 
 
 //setup
-await cli.Login("BugBusters", "password");
+await cli.Login(name, password);
 cli.ReadTask();
 
 //other call tests
+await cli.Cheat();
 await cli.BuyBike();
 
-
+//await cli.DESTROY_THIS_SHIT();
 
 Console.WriteLine("Press any key to exit...");
 Console.ReadKey();
