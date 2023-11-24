@@ -2,31 +2,43 @@
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            double N = double.Parse(Console.ReadLine());
-            double result = -2;
-            char[] NArray = N.ToString().ToCharArray();
-            while (result==-2)
+            string first = Console.ReadLine();
+            string second = Console.ReadLine();
+            string third = Console.ReadLine();
+            string[] input = { first, second, third };
+            
+            Dictionary<string, char> segmentMap = new Dictionary<string, char>()
             {
-                N++;               
-                double counter = 0;
-                NArray = N.ToString().ToCharArray();
-                if (NArray.Length>1)
+                {" _ | ||_|", '0'},
+                {"     |  |", '1'},
+                {" _  _||_ ", '2'},
+                {" _  _| _|", '3'},
+                {"   |_|  |", '4'},
+                {" _ |_  _|", '5'},
+                {" _ |_ |_|", '6'},
+                {" _   |  |", '7'},
+                {" _ |_||_|", '8'},
+                {" _ |_| _|", '9'}
+            };
+
+            int digitCount = input[0].Length / 3;
+            char[] result = new char[digitCount];
+
+            for (int i = 0; i < digitCount; i++)
+            {
+                string digit = "";
+                for (int j = 0; j < 3; j++)
                 {
-                    for (int i = 0; i < NArray.Length - 1; i++)
-                    {
-                        if (NArray[i + 1] >= NArray[i])
-                        {
-                            counter++;
-                        }
-                    }
-                    if (counter == NArray.Length-1) { result = double.Parse(NArray); }                   
+                    digit += input[j].Substring(i * 3, 3);
                 }
-                else
+
+                if (segmentMap.ContainsKey(digit))
                 {
-                    result = double.Parse(NArray);
+                    result[i] = segmentMap[digit];
                 }
+              
             }
             Console.WriteLine(result);
         }
