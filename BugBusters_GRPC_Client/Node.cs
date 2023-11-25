@@ -8,12 +8,15 @@ using System.Threading.Tasks;
 namespace BugBusters_GRPC_Client {
     public class Node {
         // Change this depending on what the desired size is for each element in the grid
-        public static int NODE_SIZE = 32;
+        public static int NODE_SIZE = 1;
         public Node Parent;
         public Vector2 Position;
         public Vector2 Center {
+            //get {
+            //    return new Vector2(Position.X + NODE_SIZE / 2, Position.Y + NODE_SIZE / 2);
+            //}
             get {
-                return new Vector2(Position.X + NODE_SIZE / 2, Position.Y + NODE_SIZE / 2);
+                return new Vector2(Position.X, Position.Y);
             }
         }
         public float DistanceToTarget;

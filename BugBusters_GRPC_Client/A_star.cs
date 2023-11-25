@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Numerics;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BugBusters_GRPC_Client
 {
@@ -11,14 +12,14 @@ namespace BugBusters_GRPC_Client
     {
 
         List<List<Node>> Grid;
-        int GridRows
+        int GridX
         {
             get
             {
                 return Grid[0].Count;
             }
         }
-        int GridCols
+        int GridY
         {
             get
             {
@@ -42,52 +43,61 @@ namespace BugBusters_GRPC_Client
             List<Node> adjacencies;
             Node current = start;
 
-            // add start node to Open List
-            OpenList.Enqueue(start, start.F);
-
-            while (OpenList.Count != 0 && !ClosedList.Exists(x => x.Position == end.Position))
-            {
-                current = OpenList.Dequeue();
-                ClosedList.Add(current);
-                adjacencies = GetAdjacentNodes(current);
-
-                foreach (Node n in adjacencies)
-                {
-                    if (!ClosedList.Contains(n) && n.Walkable)
-                    {
-                        bool isFound = false;
-                        foreach (var oLNode in OpenList.UnorderedItems)
-                        {
-                            if (oLNode.Element == n)
-                            {
-                                isFound = true;
-                            }
-                        }
-                        if (!isFound)
-                        {
-                            n.Parent = current;
-                            n.DistanceToTarget = Math.Abs(n.Position.X - end.Position.X) + Math.Abs(n.Position.Y - end.Position.Y);
-                            n.Cost = n.Weight + n.Parent.Cost;
-                            OpenList.Enqueue(n, n.F);
-                        }
-                    }
+            adjacencies = GetAdjacentNodes(current);
+            foreach (var node in adjacencies) {
+                if (node.Walkable) {
+                    Console.WriteLine(node.Walkable);
+                    Path.Push(node);
+                    break;
                 }
             }
 
-            // construct path, if end was not closed return null
-            if (!ClosedList.Exists(x => x.Position == end.Position))
-            {
-                return null;
-            }
+            // add start node to Open List
+            //OpenList.Enqueue(start, start.F);
 
-            // if all good, return path
-            Node temp = ClosedList[ClosedList.IndexOf(current)];
-            if (temp == null) return null;
-            do
-            {
-                Path.Push(temp);
-                temp = temp.Parent;
-            } while (temp != start && temp != null);
+            //while (OpenList.Count != 0 && !ClosedList.Exists(x => x.Position == end.Position))
+            //{
+            //    current = OpenList.Dequeue();
+            //    ClosedList.Add(current);
+            //    adjacencies = GetAdjacentNodes(current);
+
+            //    foreach (Node n in adjacencies) //ez itt gebaszos
+            //    {
+            //        if (!ClosedList.Contains(n) && n.Walkable)
+            //        {
+            //            bool isFound = false;
+            //            foreach (var oLNode in OpenList.UnorderedItems)
+            //            {
+            //                if (oLNode.Element == n)
+            //                {
+            //                    isFound = true;
+            //                }
+            //            }
+            //            if (!isFound)
+            //            {
+            //                n.Parent = current;
+            //                n.DistanceToTarget = Math.Abs(n.Position.X - end.Position.X) + Math.Abs(n.Position.Y - end.Position.Y);
+            //                n.Cost = n.Weight + n.Parent.Cost;
+            //                OpenList.Enqueue(n, n.F);
+            //            }
+            //        }
+            //    }
+            //}
+
+            // construct path, if end was not closed return null
+            //if (!ClosedList.Exists(x => x.Position == end.Position))
+            //{
+            //    return null;
+            //}
+
+            //// if all good, return path
+            //Node temp = ClosedList[ClosedList.IndexOf(current)];
+            //if (temp == null) return null;
+            //do
+            //{
+            //    Path.Push(temp);
+            //    temp = temp.Parent;
+            //} while (temp != start && temp != null);
             return Path;
         }
 
@@ -95,26 +105,33 @@ namespace BugBusters_GRPC_Client
         {
             List<Node> temp = new List<Node>();
 
-            int row = (int)n.Position.Y;
-            int col = (int)n.Position.X;
+            int X = (int)n.Position.X;
+            int Y = (int)n.Position.Y;
 
-            if (row + 1 < GridRows)
-            {
-                temp.Add(Grid[col][row + 1]);
+            if (X + 1 < GridX) {
+                temp.Add(Grid[X + 1][Y]); //1
+                if (Y - 1 >= 0 ) {
+                    temp.Add(Grid[X + 1][Y - 1]); //2
+                }
+                if (Y + 1 < GridY) {
+                    temp.Add(Grid[X + 1][Y + 1]); //3
+                }               
             }
-            if (row - 1 >= 0)
-            {
-                temp.Add(Grid[col][row - 1]);
+            if (X - 1 >= 0) {
+                temp.Add(Grid[X - 1][Y]); //4
+                if (Y - 1 >= 0) {
+                    temp.Add(Grid[X - 1][Y - 1]); //5
+                }
+                if (Y + 1 < GridY) {
+                    temp.Add(Grid[X - 1][Y + 1]); //6
+                }
             }
-            if (col - 1 >= 0)
-            {
-                temp.Add(Grid[col - 1][row]);
+            if (Y - 1 >= 0) {
+                temp.Add(Grid[X][Y - 1]); //7
             }
-            if (col + 1 < GridCols)
-            {
-                temp.Add(Grid[col + 1][row]);
+            if (Y + 1 < GridY) {
+                temp.Add(Grid[X][Y + 1]); //8
             }
-
             return temp;
         }
     }

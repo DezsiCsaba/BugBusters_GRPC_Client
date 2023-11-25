@@ -5,9 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace BugBusters_GRPC_Client.Models {
-    internal class SteerBikeInputModel {
-        public int bikeId { get; set; }
-        public int isActive { get; set; }
-        public int degree { get; set; }
+    public class PacketStepModel {
+        public Node node { get; set; }
+        public ItemLocationModel packet {  get; set; }
     }
 }

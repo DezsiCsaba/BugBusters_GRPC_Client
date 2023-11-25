@@ -9,6 +9,8 @@ using System.Text.Json;
 using Newtonsoft.Json;
 using ImageMagick;
 using System.Numerics;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 Console.WriteLine(">>> Starting up GRPC client..");
 
@@ -52,29 +54,57 @@ var registerReply = await client.RegisterTeamAsync(
 );
 #region map conversion
 byte[] map = registerReply.MapImagePng.ToByteArray();
-MagickImage image = new MagickImage(map);
-var pixels = image.GetPixels();
+Bitmap image = new Bitmap(new MemoryStream(map));
+int teamId = registerReply.TeamId;
 
-Console.WriteLine($">>> [GRID] creating nodes from input img");
+//image.Save("jozsi.png");
+// Get the color of a pixel within myBitmap.
 
-List<List<Node>> grid =  new List<List<Node>>();
-for (int x = 0; x < image.Width; x++)
+
+List<List<Node>> grid = new List<List<Node>>();
+for (int y = 0; y < image.Height; y++)
 {
     List<Node> NodeList = new List<Node>();
-    for (int y = 0; y < image.Height; y++)
+    for (int x = 0; x < image.Width; x++)
     {
-        var color = pixels[x, y].ToColor();
-        if (color.R == 65535 && color.G == 65535 && color.B == 65535)
+        System.Drawing.Color color = image.GetPixel(x, y);
+        if (color == System.Drawing.Color.Black)
         {
-            NodeList.Add(new Node(new Vector2(x,y), true ));
+            NodeList.Add(new Node(new Vector2(x, y), false));
         }
         else
         {
-            NodeList.Add(new Node(new Vector2(x, y), false));
+            NodeList.Add(new Node(new Vector2(x, y), true));
         }
     }
     grid.Add(NodeList);
 }
+
+
+
+    //MagickImage image = new MagickImage(map);
+    //var pixels = image.GetPixels();
+
+    //Console.WriteLine($">>> [GRID] creating nodes from input img");
+
+    //List<List<Node>> grid =  new List<List<Node>>();
+    //for (int x = 0; x < image.Width; x++)
+    //{
+    //    List<Node> NodeList = new List<Node>();
+    //    for (int y = 0; y < image.Height; y++)
+    //    {
+    //        var color = pixels[x, y].ToColor();
+    //        if (color.R == 0 && color.G == 0 && color.B == 0)
+    //        {
+    //            NodeList.Add(new Node(new Vector2(x,y), true ));
+    //        }
+    //        else
+    //        {
+    //            NodeList.Add(new Node(new Vector2(x, y), false));
+    //        }
+    //    }
+    //    grid.Add(NodeList);
+    ///}
 #endregion
 
 Console.WriteLine("Registration complete with the following id : " + registerReply.TeamId);
@@ -84,8 +114,9 @@ Clientlibrary cli = new Clientlibrary(
     client = client,
     call = call,
     cmdCounter = 0,
-    mapImagePNG = registerReply.MapImagePng,
-    grid
+    image = image,
+    grid,
+    teamId
 );
 
 
@@ -95,12 +126,16 @@ cli.ReadTask();
 
 
 //other call tests
-await cli.Cheat(async() => { 
-    await cli.BuyBike(async () => { }); 
-});
+//await cli.BuyBike(async () => {
+//    await cli.SteerBike(cli.Bikes[0].id, true, 1, async () => { });
+//});
+
+
 
 
 //await cli.DESTROY_THIS_SHIT();
 
 Console.WriteLine("Press any key to exit...");
 Console.ReadKey();
+
+

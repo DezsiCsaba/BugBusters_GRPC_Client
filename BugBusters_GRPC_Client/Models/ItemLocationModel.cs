@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace BugBusters_GRPC_Client.Models {
+    [Serializable]
     public  class ItemLocationModel
     {
         public int Value { get; set; }
