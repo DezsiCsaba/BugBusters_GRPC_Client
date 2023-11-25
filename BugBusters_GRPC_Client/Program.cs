@@ -7,6 +7,8 @@ using System;
 using BugBusters_GRPC_Client.Models;
 using System.Text.Json;
 using Newtonsoft.Json;
+using ImageMagick;
+using System.Numerics;
 
 Console.WriteLine(">>> Starting up GRPC client..");
 
@@ -45,10 +47,35 @@ var registerReply = await client.RegisterTeamAsync(
     new RegistrationRequestMessage { 
         TeamName = name,
         TeamPassword = password,
-        TeamImagePng = imagebyteStr
+        TeamImagePng = imagebyteStr,
     }
 );
-mapImagePNG = registerReply.MapImagePng;
+#region map conversion
+byte[] map = registerReply.MapImagePng.ToByteArray();
+MagickImage image = new MagickImage(map);
+var pixels = image.GetPixels();
+
+Console.WriteLine($">>> [GRID] creating nodes from input img");
+
+List<List<Node>> grid =  new List<List<Node>>();
+for (int x = 0; x < image.Width; x++)
+{
+    List<Node> NodeList = new List<Node>();
+    for (int y = 0; y < image.Height; y++)
+    {
+        var color = pixels[x, y].ToColor();
+        if (color.R == 65535 && color.G == 65535 && color.B == 65535)
+        {
+            NodeList.Add(new Node(new Vector2(x,y), true ));
+        }
+        else
+        {
+            NodeList.Add(new Node(new Vector2(x, y), false));
+        }
+    }
+    grid.Add(NodeList);
+}
+#endregion
 
 Console.WriteLine("Registration complete with the following id : " + registerReply.TeamId);
 
@@ -57,7 +84,8 @@ Clientlibrary cli = new Clientlibrary(
     client = client,
     call = call,
     cmdCounter = 0,
-    mapImagePNG = registerReply.MapImagePng
+    mapImagePNG = registerReply.MapImagePng,
+    grid
 );
 
 

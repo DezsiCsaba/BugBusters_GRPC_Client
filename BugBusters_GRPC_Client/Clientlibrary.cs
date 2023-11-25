@@ -31,6 +31,8 @@ namespace BugBusters_GRPC_Client {
         private int currentBikeID;
         private int currentPacketID;
         public int currentMoney;
+        public List<List<Node>> grid;
+        public A_star path_finder;
         #endregion
 
         public async Task DESTROY_THIS_SHIT()
@@ -128,14 +130,9 @@ namespace BugBusters_GRPC_Client {
                 else
                 {
                     //await Console.Out.WriteAsync("[UPDATE] > map updated");
+
+                    //entity types: "DeliveryBike" "Packet" "Mine"
                     Items = JsonConvert.DeserializeObject<ItemLocationModel[]>(data).ToList();
-                    //foreach(ItemLocationModel item in Items)
-                    //{
-                    //    await Console.Out.WriteLineAsync("\n");
-                    //    foreach (PropertyInfo prop in typeof(ItemLocationModel).GetProperties()) {
-                    //        Console.WriteLine($"\t " + prop.Name + " : " + prop.GetValue(item));
-                    //    }                        
-                    //} 
                 }
             }
         }
@@ -145,16 +142,19 @@ namespace BugBusters_GRPC_Client {
             PdService.PdServiceClient client, 
             AsyncDuplexStreamingCall<CommandMessage, CommandMessage> call, 
             int cmdCounter,
-            ByteString mapImagePng
-            ){
+            ByteString mapImagePng,
+            List<List<Node>> grid
+            )
+        {
                 this.client = client;
                 this.call = call;
                 this.cmdCounter = cmdCounter;
                 mapImagePNG = mapImagePng;
                 stream = call.RequestStream;
                 currentMoney = 1100;
+                this.grid = grid;
         }
-
+        
 
         public async Task Login(string teamName, string password, Func<Task> callback)
         {
