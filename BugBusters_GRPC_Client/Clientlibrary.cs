@@ -28,6 +28,7 @@ namespace BugBusters_GRPC_Client {
         int cmdCounter;
         public List<MotorBike> Bikes = new List<MotorBike>();
         public List<ItemLocationModel> Items = new List<ItemLocationModel>();
+        public List<PixelModel> Paths;
         private int currentBikeID;
         private int currentPacketID;
         public int currentMoney;
@@ -60,11 +61,11 @@ namespace BugBusters_GRPC_Client {
 
                             await Console.Out.WriteLineAsync("\t> new bike added with id:" + data);
 
-                            await BuyMine(bike.id, async () => {
-                                await PlaceMine(bike.id, async () => {
-                                    //await SteerBike(bike.id, true, 0, async() => {});
-                                });
-                            });
+                            //await BuyMine(bike.id, async () => {
+                            //    await PlaceMine(bike.id, async () => {
+                            //        //await SteerBike(bike.id, true, 0, async() => {});
+                            //    });
+                            //});
                         }
                     }
                     else if( cmdID == "BuyMineResponse") {
@@ -127,15 +128,23 @@ namespace BugBusters_GRPC_Client {
                 }
                 else
                 {
-                    //await Console.Out.WriteAsync("[UPDATE] > map updated");
+                    //entity types: "DeliveryBike" "Packet" "Mine"
                     Items = JsonConvert.DeserializeObject<ItemLocationModel[]>(data).ToList();
-                    //foreach(ItemLocationModel item in Items)
-                    //{
-                    //    await Console.Out.WriteLineAsync("\n");
-                    //    foreach (PropertyInfo prop in typeof(ItemLocationModel).GetProperties()) {
-                    //        Console.WriteLine($"\t " + prop.Name + " : " + prop.GetValue(item));
-                    //    }                        
-                    //} 
+                    List<string> entites = new List<string>();
+
+                    foreach (ItemLocationModel item in Items) {
+                        await Console.Out.WriteLineAsync("\n");
+
+                        foreach (PropertyInfo prop in typeof(ItemLocationModel).GetProperties()) {
+                            Console.WriteLine($"\t " + prop.Name + " : " + prop.GetValue(item));
+                            if (prop.Name == "OwnerId") {
+                                if (!entites.Contains(prop.GetValue(item))) { 
+                                    entites.Add((string)prop.GetValue(item));
+                                }
+                            }
+                        }
+                    }
+                    ;   
                 }
             }
         }
@@ -145,7 +154,8 @@ namespace BugBusters_GRPC_Client {
             PdService.PdServiceClient client, 
             AsyncDuplexStreamingCall<CommandMessage, CommandMessage> call, 
             int cmdCounter,
-            ByteString mapImagePng
+            ByteString mapImagePng,
+            List<PixelModel> Paths
             ){
                 this.client = client;
                 this.call = call;
@@ -153,6 +163,7 @@ namespace BugBusters_GRPC_Client {
                 mapImagePNG = mapImagePng;
                 stream = call.RequestStream;
                 currentMoney = 1100;
+                this.Paths = Paths;
         }
 
 
